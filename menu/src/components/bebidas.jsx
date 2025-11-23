@@ -5,7 +5,10 @@
 // StyleSheet: para criar estilos
 // ScrollView: para permitir rolagem
 // Image: para exibir imagens
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { useState, useContext } from 'react';
+import { CartContext } from '../context/CartContext';
+import Snackbar from './snackbar';
 
 // Função principal do componente de bebidas
 export default function BebidasScreen() {
@@ -55,9 +58,21 @@ export default function BebidasScreen() {
     }
   ];
 
+  const { addToCart } = useContext(CartContext);
+  const [addedMsg, setAddedMsg] = useState(null);
+
+  const parsePrice = (precoStr) => {
+    if (!precoStr) return 0;
+    // remove 'R$', spaces and convert comma to dot
+    const s = precoStr.replace(/[^0-9,\.]/g, '').replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
   // O componente retorna uma ScrollView (permite rolar a tela)
   return (
-    <ScrollView style={styles.container}>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
       {/* Cabeçalho da tela de bebidas */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Bebidas</Text>
@@ -76,11 +91,32 @@ export default function BebidasScreen() {
               <Text style={styles.bebidaNome}>{bebida.nome}</Text>
               <Text style={styles.bebidaDescricao}>{bebida.descricao}</Text>
               <Text style={styles.bebidaPreco}>{bebida.preco}</Text>
+
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  const price = parsePrice(bebida.preco);
+                  const product = {
+                    id: bebida.id,
+                    nome: bebida.nome,
+                    precos: { unidade: price },
+                    imagem: bebida.imagem,
+                  };
+                  addToCart(product, 'unidade', 1);
+                  setAddedMsg(`${bebida.nome} adicionada ao carrinho`);
+                  setTimeout(() => setAddedMsg(null), 2000);
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Adicionar ao carrinho</Text>
+              </TouchableOpacity>
             </View>
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+
+      <Snackbar message={addedMsg} />
+    </View>
   );
 }
 
@@ -146,4 +182,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#d32f2f', // Vermelho
   },
+  addButton: {
+    marginTop: 8,
+    backgroundColor: '#d32f2f',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: 'flex-start'
+  },
+  snackbar: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 24,
+    backgroundColor: '#333',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  snackbarText: { color: '#fff' },
 });

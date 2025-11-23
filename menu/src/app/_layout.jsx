@@ -1,11 +1,20 @@
 import { Drawer } from "expo-router/drawer";
 import { View, Text, TouchableOpacity } from "react-native";
+import { CartProvider, CartContext } from "../context/CartContext";
+import { useContext } from 'react';
 import { useRouter } from "expo-router";
-// Importa os ícones
 import { FontAwesome, Ionicons } from "@expo/vector-icons"; 
 
 export default function RootLayout() {
-  const router = useRouter();
+  return (
+    <CartProvider>
+      <RootLayoutContent />
+    </CartProvider>
+  );
+}
+
+function RootLayoutContent() {
+  const { count } = useContext(CartContext);
 
   return (
     <Drawer
@@ -16,76 +25,57 @@ export default function RootLayout() {
         drawerLabelStyle: { fontSize: 18 },
         headerTitle: () => (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            
-            {/* Ícone da Pizza */}
-            <Ionicons
-              name="pizza"
-              size={28}
-              color="#fff"
-              style={{ marginRight: 10 }}
-            />
-            
-            {/* Título */}
-            <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "bold",
-                color: "#fff",
-              }}
-            >
-              Pizzaria Delícia
-            </Text>
+            <Ionicons name="pizza" size={28} color="#fff" style={{ marginRight: 10 }} />
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff" }}>Pizzaria Delícia</Text>
           </View>
         ),
-        // Ícone do Carrinho
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => router.push("/carrinho")} 
-            style={{ marginRight: 15 }}
-          >
-            <FontAwesome name="shopping-cart" size={24} color="#fff" />
-          </TouchableOpacity>
-        ),
+        headerRight: () => <HeaderCartButton />,
       }}
     >
-      
-      {/* 1. TELA DO CARDÁPIO (NOME BONITO) */}
-      {/* 'drawerLabel' define o texto "Cardápio" */}
       <Drawer.Screen
-        name="(cardapio)" // <--- Esta 'name' DEVE corresponder à pasta "app/(cardapio)"
-        options={{
-          drawerLabel: "Cardápio",
-          title: "Cardápio",
-        }}
+        name="(cardapio)"
+        options={{ drawerLabel: "Cardápio", title: "Cardápio" }}
       />
 
-      {/* 2. TELA DO CARRINHO (NOME BONITO) */}
       <Drawer.Screen
         name="carrinho"
-        options={{
-          drawerLabel: "Carrinho",
-          title: "Carrinho",
-        }}
+        options={{ drawerLabel: "Carrinho", title: "Carrinho" }}
       />
 
-      {/* --- CORREÇÃO: ESCONDENDO OS NOMES FEIOS --- */}
-
-      {/* 3. Esconde a tela "índice" (app/index.tsx) */}
       <Drawer.Screen
         name="index"
-        options={{
-          drawerItemStyle: { display: 'none' }, // ESCONDE DO MENU
-          title: "Início",
-        }}
+        options={{ drawerItemStyle: { display: 'none' }, title: "Início" }}
       />
-      
-      {/* 4. Esconde a tela "Ops!" (app/Ops!.tsx) */}
-      <Drawer.Screen
-        name="Ops!" // Mude se o nome do seu arquivo for "Ops.tsx"
-        options={{
-          drawerItemStyle: { display: 'none' }, // ESCONDE DO MENU
-        }}
-      /> 
     </Drawer>
+  );
+}
+
+function HeaderCartButton() {
+  const router = useRouter();
+  const { count } = useContext(CartContext); // <- CORRIGIDO
+
+  return (
+    <TouchableOpacity onPress={() => router.push('/carrinho')} style={{ marginRight: 12 }}>
+      <View style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}>
+        <FontAwesome name="shopping-cart" size={22} color="#fff" />
+        {count > 0 && (
+          <View
+            style={{
+              position: 'absolute',
+              right: -6,
+              top: -6,
+              backgroundColor: '#fff',
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              borderRadius: 12,
+            }}
+          >
+            <Text style={{ color: '#d32f2f', fontWeight: 'bold', fontSize: 12 }}>
+              {count}
+            </Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 }
